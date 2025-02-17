@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sliding Drawer"
+        android:id="@+id/text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <TextView
+        android:layout_margin="15dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sliding Drawer1"
+        android:id="@+id/text1"
+        app:layout_constraintTop_toBottomOf="@id/text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        />
+
+    <TextView
+        android:layout_margin="15dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sliding Drawer2"
+        android:id="@+id/text2"
+        app:layout_constraintTop_toBottomOf="@id/text1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        />
+
+    <!-- In your main layout XML -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <!-- Your main content here -->
+
+        <HorizontalScrollView
+            android:id="@+id/emoji_drawer"
+            android:layout_width="wrap_content"
+            android:layout_height="100dp"
+            android:layout_gravity="bottom|end"
+            android:background="#ECEFF1"
+            android:visibility="invisible"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <LinearLayout
+                android:id="@+id/emoji_container"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:clipChildren="false"
+                android:clipToPadding="false"/>
+
+        </HorizontalScrollView>
+
+        <HorizontalScrollView
+            android:id="@+id/emoji_drawer1"
+            android:layout_width="wrap_content"
+            android:layout_height="100dp"
+            android:layout_gravity="bottom|end"
+            android:background="#ECEFF1"
+            android:visibility="invisible"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <LinearLayout
+                android:id="@+id/emoji_container1"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:clipChildren="false"
+                android:clipToPadding="false"/>
+
+        </HorizontalScrollView>
+
+    <com.palmabrahma.emojidrawer.EmojiDrawer
+        android:id="@+id/emojiDrawer"
+        android:layout_width="wrap_content"
+        android:layout_height="100dp"
+        app:emojiSize="31dp"
+        app:emojiSpacing="0dp"
+        app:scaleFactor="3.8"
+        app:cornerRadius="32dp"
+        app:animationDuration="200"
+        android:layout_gravity="bottom|end"/>
+
+    </FrameLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
