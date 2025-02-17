@@ -2,6 +2,7 @@ package com.palmabrahma.slidetray
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.HorizontalScrollView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
@@ -37,8 +38,6 @@ class MainActivity : AppCompatActivity() {
         TrayUtil1.addEmojis(parentView)
 
 
-
-
         val emojiDrawer = findViewById<EmojiDrawer>(R.id.emojiDrawer)
         val emojis = listOf(
             R.drawable.angel,
@@ -56,6 +55,23 @@ class MainActivity : AppCompatActivity() {
                 val snack = Snackbar.make(emojiDrawer, "emoji was selected", LENGTH_LONG)
                 snack.show()
             }
+        }
+
+
+
+        val popButton = findViewById<Button>(R.id.text3)
+        val emojiDrawerPopupWindow = EmojiPopupWindow(this, popButton)
+        emojiDrawerPopupWindow.setEmojis(emojis)
+
+        emojiDrawerPopupWindow.onEmojiSelectedListener = object : EmojiPopupWindow.OnEmojiSelectedListener {
+            override fun onEmojiSelected(index: Int, drawableRes: Int) {
+                val snack = Snackbar.make(emojiDrawer, "emoji $index was selected", LENGTH_LONG)
+                snack.show()
+            }
+        }
+
+        popButton.setOnClickListener {
+            emojiDrawerPopupWindow.toggleEmojiDrawer()
         }
     }
 }

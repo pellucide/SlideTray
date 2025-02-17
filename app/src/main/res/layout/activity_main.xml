@@ -8,7 +8,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <TextView
+    <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Sliding Drawer"
@@ -19,7 +19,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
 
-    <TextView
+    <Button
         android:layout_margin="15dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -30,16 +30,26 @@
         app:layout_constraintStart_toStartOf="parent"
         />
 
-    <TextView
+    <Button
         android:layout_margin="15dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Sliding Drawer2"
+        android:text="Sliding Drawer as a Custom View"
         android:id="@+id/text2"
         app:layout_constraintTop_toBottomOf="@id/text1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Pop"
+        android:id="@+id/text3"
+        app:layout_constraintTop_toBottomOf="@id/text2"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
+    <!-- app:layout_constraintStart_toStartOf="parent" -->
 
     <!-- In your main layout XML -->
     <FrameLayout

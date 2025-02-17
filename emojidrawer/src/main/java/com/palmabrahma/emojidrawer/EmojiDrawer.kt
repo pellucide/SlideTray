@@ -151,7 +151,6 @@ class EmojiDrawer @JvmOverloads constructor(
             .build()
     }
 
-
     fun setEmojis(drawableResIds: List<Int>) {
         emojiContainer.removeAllViews()
         drawableResIds.forEachIndexed { _, resId ->
@@ -163,7 +162,6 @@ class EmojiDrawer @JvmOverloads constructor(
         }
     }
 
-    // Corrected handleEmojiSelection
     private fun handleEmojiSelection(view: AppCompatImageView) {
         val position = emojiContainer.indexOfChild(view)
         val drawableRes = view.tag as? Int ?: 0
@@ -200,8 +198,6 @@ class EmojiDrawer @JvmOverloads constructor(
         }
     }
 
-    private fun Int.dpToPx(): Int = (this * resources.displayMetrics.density).toInt()
-    private fun Float.dpToPx(): Float = this * resources.displayMetrics.density
 
     private fun setupAttributes(attrs: AttributeSet?) {
         val a = context.obtainStyledAttributes(attrs, R.styleable.EmojiDrawer)
@@ -241,7 +237,7 @@ class EmojiDrawer @JvmOverloads constructor(
                 event.rawY <= location[1] + view.height
     }
 
-    fun toggleEmojiDrawer() {
+    fun toggleEmojiDrawer(){
         if (isOpen()) {
             close()
         } else {
@@ -249,12 +245,10 @@ class EmojiDrawer @JvmOverloads constructor(
         }
     }
 
-    // Add this function inside the EmojiDrawer class
     fun isOpen(): Boolean {
         return visibility == View.VISIBLE && translationX == 0f
     }
 
-    // Updated close() function to maintain state consistency
     fun close() {
         post {
             animate().translationX(width.toFloat())
@@ -267,7 +261,6 @@ class EmojiDrawer @JvmOverloads constructor(
         }
     }
 
-    // Updated open() function
     fun open() {
         post {
             visibility = View.VISIBLE
@@ -285,6 +278,9 @@ class EmojiDrawer @JvmOverloads constructor(
                 .start()
         }
     }
+
+    private fun Int.dpToPx(): Int = (this * resources.displayMetrics.density).toInt()
+    private fun Float.dpToPx(): Float = this * resources.displayMetrics.density
 
     private fun close1() {
         post {
