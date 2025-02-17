@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="EmojiDrawer">
+        <attr name="emojiSize" format="dimension"/>
+        <attr name="emojiSpacing" format="dimension"/>
+        <attr name="scaleFactor" format="float"/>
+        <attr name="cornerRadius" format="dimension"/>
+        <attr name="animationDuration" format="integer"/>
+    </declare-styleable>
+</resources>
