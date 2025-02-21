@@ -19,15 +19,17 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
+import androidx.core.view.children
 import com.google.android.material.shape.CornerFamily
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.shape.ShapeAppearanceModel
 
 class EmojiPopupWindow(context: Context, private var anchor: View) {
 
-    private lateinit var displayMetrics : DisplayMetrics
+    private var displayMetrics: DisplayMetrics
     private val doElevation: Boolean = true
     private val popupWindow: PopupWindow
     private val contentView: FrameLayout
@@ -56,11 +58,14 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
         }
         //defaultElevation = 8f.dpToPx()
 
-        emojiContainer = contentView.findViewById<LinearLayout>(R.id.emoji_container).apply {
+        emojiContainer = contentView.findViewById<LinearLayout>(R.id.emoji_container2).apply {
             clipChildren = false
             clipToPadding = false
             gravity = Gravity.CENTER
-            background = context.getDrawable(com.palmabrahma.emojidrawer.R.drawable.rounded_rect_background)
+            background = AppCompatResources.getDrawable(
+                context,
+                com.palmabrahma.emojidrawer.R.drawable.rounded_rect_background
+            )
             setBackgroundColor(Color.BLUE)
         }
 
@@ -80,48 +85,10 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
         displayMetrics = contentView.context.resources.displayMetrics
         //popupWindow.overlapAnchor = true
         //popupWindow.setTouchInterceptor { v, event ->
-            //false
+        //false
         //}
 
     }
-
-    /* Old code
-
-    init {
-        val inflater = LayoutInflater.from(context)
-        contentView = inflater.inflate(R.layout.emoji_drawer_popup, null)
-        emojiContainer = contentView.findViewById(R.id.emoji_container).apply {
-            clipChildren = false
-            clipToPadding = false
-        }
-        emojiContainer.apply {
-            layoutParams = LayoutParams(
-                LayoutParams.WRAP_CONTENT,
-                LayoutParams.MATCH_PARENT
-            )
-            clipChildren = false
-            clipToPadding = false
-            gravity = Gravity.CENTER
-        }
-        val horizontalScroll = contentView.findViewById<HorizontalScrollView>(R.id.horizontal_scroll)
-        horizontalScroll.clipChildren = false
-        horizontalScroll.clipToPadding = false
-        horizontalScroll.overScrollMode = OVER_SCROLL_NEVER
-
-        popupWindow = PopupWindow(
-            contentView,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            true
-        ).apply {
-            setBackgroundDrawable(ContextCompat.getDrawable(context, android.R.color.transparent))
-            isOutsideTouchable = true
-            elevation = 8f
-        }
-    }
-
-     */
-
 
     private fun createEmojiImageView(drawableRes: Int): AppCompatImageView {
         return AppCompatImageView(contentView.context).apply {
@@ -155,19 +122,21 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     android.util.Log.d(TAG, "ACTION_DOWN view:$index")
-                    animateEmojiSelection(v, true)
+                    if (currentSelected != v)
+                        animateEmojiSelection(v, true)
                     true
                 }
 
                 MotionEvent.ACTION_UP -> {
                     android.util.Log.d(TAG, "ACTION_UP view:$index")
-                    animateEmojiSelection(v, false)
-                    handleEmojiSelection(v)
-                    /* TODO: isTouchInsideView does not work. Debug and fix
-                    if (isTouchInsideView(event, v)) {
-                        handleEmojiSelection(v)
+                    findViewFromEvent(event)?.let { imageView ->
+                        animateEmojiSelection(imageView, false)
+                        handleEmojiSelection(imageView)
+                    }?:run {
+                        currentSelected?.let {
+                            animateEmojiSelection(it, false)
+                        }
                     }
-                     */
                     true
                 }
 
@@ -177,7 +146,16 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
                     true
                 }
 
-                else ->{
+                MotionEvent.ACTION_MOVE -> {
+                    android.util.Log.d(TAG, "ACTION_MOVE view:$index")
+                    findViewFromEvent(event)?.let { imageView ->
+                        if (currentSelected != imageView)
+                            animateEmojiSelection(imageView, true)
+                    }
+                    true
+                }
+
+                else -> {
                     android.util.Log.d(TAG, "${event.action}. view:$index")
                     false
                 }
@@ -185,51 +163,14 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
         }
     }
 
-    private fun setupTouchListener(view: AppCompatImageView) {
-        view.setOnTouchListener { vv, event ->
+    private fun findViewFromEvent(event: MotionEvent): AppCompatImageView? {
+        emojiContainer.children.forEach { vv ->
             val v = vv as AppCompatImageView
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    v.animate()
-                        .scaleX(1.8f)
-                        .scaleY(1.8f)
-                        .translationZ(32f)
-                        .setDuration(200)
-                        .withLayer() // Enable hardware layer
-                        .start()
-                    true
-                }
-                MotionEvent.ACTION_UP -> {
-                    v.animate()
-                        .scaleX(1f)
-                        .scaleY(1f)
-                        .translationZ(0f)
-                        .setDuration(200)
-                        .start()
-
-                    if (isTouchInsideView(event, v)) {
-                        //onEmojiSelectedListener?.invoke(v.tag as Int)
-                        val index = emojiContainer.indexOfChild(view)
-                        val drawableRes = view.tag as? Int ?: 0
-                        onEmojiSelectedListener?.onEmojiSelected(index, drawableRes)
-                        close()
-                    }
-                    true
-                }
-                MotionEvent.ACTION_CANCEL -> {
-                    v.animate()
-                        .scaleX(1f)
-                        .scaleY(1f)
-                        .translationZ(0f)
-                        .setDuration(200)
-                        .start()
-                    true
-                }
-                else -> false
-            }
+            if (isTouchInsideView(event, v))
+                return v
         }
+        return null
     }
-
 
     private fun animateEmojiSelection(view: AppCompatImageView, selected: Boolean) {
         val animator = ValueAnimator.ofFloat(
@@ -241,13 +182,12 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
                 val fraction = it.animatedValue as Float
                 view.scaleX = 1 + (scaleFactor - 1) * fraction
                 view.scaleY = 1 + (scaleFactor - 1) * fraction
-                if (doElevation){
+                if (doElevation) {
                     if (selected) view.elevation += fraction
                     else view.elevation += (fraction - 1)
                 }
-                (view.background as MaterialShapeDrawable).let { bg ->
-                    bg.shapeAppearanceModel = createShapeModel(cornerRadius * fraction)
-                }
+                (view.background as MaterialShapeDrawable).shapeAppearanceModel =
+                    createShapeModel(cornerRadius * fraction)
             }
         }
         //android.util.Log.d(TAG, "selected: $selected, elevation=${view.elevation}")
@@ -273,7 +213,14 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
                 tag = resId // Store resource ID in view tag
             }
             setupEmojiTouch(imageView)
-            emojiContainer.addView(imageView)
+            val layoutParams = LinearLayout.LayoutParams(
+                emojiSize.dpToPx(),
+                emojiSize.dpToPx()
+            ).apply {
+                marginEnd = emojiSpacing.dpToPx()
+            }
+
+            emojiContainer.addView(imageView, layoutParams)
         }
     }
 
@@ -315,11 +262,11 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
             setShadowColor(Color.TRANSPARENT)
             setUseTintColorForShadow(true)
             setTint(Color.TRANSPARENT)
-            shadowCompatibilityMode  = MaterialShapeDrawable.SHADOW_COMPAT_MODE_ALWAYS
+            shadowCompatibilityMode = MaterialShapeDrawable.SHADOW_COMPAT_MODE_ALWAYS
         }
         // Elevation fallback
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-        view.elevation = defaultElevation
+            view.elevation = defaultElevation
         }
 
     }
@@ -330,66 +277,37 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
             setShadowColor(Color.TRANSPARENT)
             setUseTintColorForShadow(true)
             setTint(Color.TRANSPARENT)
-            shadowCompatibilityMode  = MaterialShapeDrawable.SHADOW_COMPAT_MODE_ALWAYS
+            shadowCompatibilityMode = MaterialShapeDrawable.SHADOW_COMPAT_MODE_ALWAYS
 
             // Elevation fallback
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            elevation = defaultElevation
+                elevation = defaultElevation
             }
         }
     }
 
-    //TODO: this does not work. Try to debug and fix
     private fun isTouchInsideView(event: MotionEvent, view: AppCompatImageView): Boolean {
         val emojiContainerLocation = IntArray(2)
-        anchor.getLocationOnScreen(emojiContainerLocation)
-        android.util.Log.d(TAG, "emojiContainerLocation=${emojiContainerLocation[0]}, ${emojiContainerLocation[1]}")
-        val contentViewLocation = IntArray(2)
-        anchor.getLocationOnScreen(contentViewLocation)
-        val anchorLocation = IntArray(2)
-        anchor.getLocationOnScreen(anchorLocation)
-        val viewLocation = IntArray(2)
-        view.getLocationOnScreen(viewLocation)
+        val viewLocationRect = Rect()
+        view.getDrawingRect(viewLocationRect)
+        emojiContainer.getLocationOnScreen(emojiContainerLocation)
+        emojiContainer.offsetDescendantRectToMyCoords(view, viewLocationRect)
+        viewLocationRect.offset(emojiContainerLocation[0], emojiContainerLocation[1])
 
-        val viewGlobalVisibleRect = Rect()
-        view.getGlobalVisibleRect(viewGlobalVisibleRect)
-
-        val viewDrawingRect = Rect()
-        view.getDrawingRect(viewDrawingRect)
-
-        val emojiContainerWidth = emojiContainer.measuredWidth
-        android.util.Log.d(TAG, "emojiContainerWidth $emojiContainerWidth")
-        android.util.Log.d(TAG, "contentViewLocation=${contentViewLocation[0]}, ${contentViewLocation[1]}")
-        android.util.Log.d(TAG, "anchorLocation=${anchorLocation[0]}, ${anchorLocation[1]}")
-        android.util.Log.d(TAG, "viewLocation=${viewLocation[0]}, ${viewLocation[1]}")
-        android.util.Log.d(TAG, "viewGlobalVisibleRect=${viewGlobalVisibleRect}")
-        android.util.Log.d(TAG, "viewDrawingRect=${viewDrawingRect}")
-        android.util.Log.d(TAG, "contentView.translation=${contentView.translationX}, ${contentView.translationY}")
-        android.util.Log.d(TAG, "contentView.width=${contentView.width}")
-        android.util.Log.d(TAG, "contentView.measuredWidth=${contentView.measuredWidth}")
-        android.util.Log.d(TAG, "contentView.left=${contentView.left}")
-        android.util.Log.d(TAG, "event=${event.rawX}, ${event.rawY}")
-        android.util.Log.d(TAG, "contentView.paddingLeft=${contentView.paddingLeft}")
-        android.util.Log.d(TAG, "anchor.width=${anchor.width}")
-        android.util.Log.d(TAG, "anchor.left=${anchor.left}")
-        viewLocation[0] += anchor.width + anchor.left
-        android.util.Log.d(TAG, "-viewLocation=${viewLocation[0]}, ${viewLocation[1]}")
-        val isInside =  event.rawX >= viewLocation[0] &&
-                event.rawX <= viewLocation[0] + view.width &&
-                event.rawY >= viewLocation[1] &&
-                event.rawY <= viewLocation[1] + view.height
-        android.util.Log.d(TAG, "isInside = $isInside")
+        val isInside = event.rawX >= viewLocationRect.left &&
+                event.rawX <= viewLocationRect.right &&
+                event.rawY >= viewLocationRect.top &&
+                event.rawY <= viewLocationRect.bottom
         return isInside
     }
 
-    fun toggleEmojiDrawer(){
+    fun toggleEmojiDrawer() {
         if (isShowing) close()
         else open(anchor)
     }
 
-    fun close() {
+    private fun close() {
         val width = contentView.width
-        android.util.Log.d(TAG, "width = $width, isShowing=$isShowing")
         contentView.animate()
             .translationX(width.toFloat())
             .setDuration(300)
@@ -400,13 +318,15 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
             .start()
     }
 
-    fun open(anchor: View) {
-        contentView.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
-            MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
-        val anchorLocation = intArrayOf(0,0)
+    private fun open(anchor: View) {
+        contentView.measure(
+            MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
+            MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+        )
+        val anchorLocation = intArrayOf(0, 0)
         anchor.getLocationInWindow(anchorLocation)
-        android.util.Log.d(TAG, "contentView.measuredWidth=${contentView.measuredWidth},isShowing=$isShowing")
-        if (isShowing) return
+        if (isShowing)
+            return
         val xOffset = 0 //anchorLocation[0]
         val yOffset = anchorLocation[1] + anchor.height
         //popupWindow.showAsDropDown(anchor, 0, 0, Gravity.START or Gravity.TOP)
@@ -414,7 +334,6 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
         isShowing = true
 
         // Initial position off-screen
-        android.util.Log.d(TAG, "contentView.translationX ${contentView.translationX}")
         val displayWidth = displayMetrics.widthPixels
         contentView.translationX = displayWidth.toFloat()
         contentView.animate()
