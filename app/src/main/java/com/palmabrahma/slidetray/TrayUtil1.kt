@@ -3,13 +3,14 @@ import android.os.Build
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewPropertyAnimator
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextView
+import com.palmabrahma.emojidrawer.EmojiDrawer
 import com.palmabrahma.slidetray.R
 
 class TrayUtil1 {
@@ -21,30 +22,26 @@ class TrayUtil1 {
                 .translationZ(64f)
                 .withLayer()  // Use hardware layer during animation
                 .setDuration(250)
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                //scaleAnim.roundedCorners(48f)  // Add rounded corners if needed
-            }
         }
         fun addEmojis(parent: View) {
             val drawer : HorizontalScrollView = parent.findViewById(R.id.emoji_drawer1)
             // Create emoji items
             val emojis = listOf(
-                R.drawable.angel,
-                R.drawable.santa,
-                R.drawable.female_fairy,
-                R.drawable.vampire,
-                R.drawable.mx_claus
+                EmojiDrawer.EmojiInfo(R.drawable.angel, "angel"),
+                EmojiDrawer.EmojiInfo(R.drawable.santa, "santa"),
+                EmojiDrawer.EmojiInfo(R.drawable.female_fairy, "female_fairy"),
+                EmojiDrawer.EmojiInfo(R.drawable.vampire, "vampire"),
+                EmojiDrawer.EmojiInfo(R.drawable.mx_claus, "mx_claus")
             )
-
             val container = parent.findViewById<LinearLayout>(R.id.emoji_container1)
-
-            emojis.forEach { drawableRes ->
+            emojis.forEach {
+                val drawableRes = it.drawableRes
                 val itemView = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.emoji_item, container, false)
-
-                val imageView = itemView.findViewById<ImageView>(R.id.emoji_image)
+                    .inflate(com.palmabrahma.emojidrawer.R.layout.emoji_item, container, false)
+                val imageView = itemView.findViewById<ImageView>(com.palmabrahma.emojidrawer.R.id.emoji_image)
                 imageView.setImageResource(drawableRes)
+                val textView = itemView.findViewById<TextView>(com.palmabrahma.emojidrawer.R.id.emoji_name)
+                textView.text = it.topText
 
                 container.addView(itemView)
                 setupEmojiTouch(imageView, drawer)

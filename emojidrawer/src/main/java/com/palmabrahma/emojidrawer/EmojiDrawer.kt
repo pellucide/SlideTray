@@ -5,8 +5,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.graphics.drawable.VectorDrawable
-import android.os.Build
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.MotionEvent
@@ -16,7 +14,6 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
 import com.google.android.material.shape.CornerFamily
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.shape.ShapeAppearanceModel
@@ -35,7 +32,7 @@ class EmojiDrawer @JvmOverloads constructor(
     private var scaleFactor = 1.8f
     private var cornerRadius = 32f
     private var currentSelected: AppCompatImageView? = null
-    private var defaultElevation = 8f.dpToPx()
+    //private var defaultElevation = 8f.dpToPx()
 
     var onEmojiSelectedListener: OnEmojiSelectedListener? = null
 
@@ -151,9 +148,10 @@ class EmojiDrawer @JvmOverloads constructor(
             .build()
     }
 
-    fun setEmojis(drawableResIds: List<Int>) {
+    fun setEmojis(emojiInfo: List<EmojiInfo>) {
         emojiContainer.removeAllViews()
-        drawableResIds.forEachIndexed { _, resId ->
+        emojiInfo.forEach {
+            val resId = it.drawableRes
             val imageView = createEmojiImageView(resId).apply {
                 tag = resId // Store resource ID in view tag
             }
@@ -292,4 +290,6 @@ class EmojiDrawer @JvmOverloads constructor(
                 .start()
         }
     }
+
+    data class EmojiInfo(val drawableRes: Int, val topText:String)
 }

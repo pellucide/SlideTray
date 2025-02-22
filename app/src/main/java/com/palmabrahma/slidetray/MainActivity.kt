@@ -14,7 +14,6 @@ import com.google.android.material.snackbar.Snackbar
 import com.palmabrahma.emojidrawer.EmojiDrawer
 
 class MainActivity : AppCompatActivity() {
-    lateinit var drawer :HorizontalScrollView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -40,11 +39,11 @@ class MainActivity : AppCompatActivity() {
 
         val emojiDrawer = findViewById<EmojiDrawer>(R.id.emojiDrawer)
         val emojis = listOf(
-            R.drawable.angel,
-            R.drawable.santa,
-            R.drawable.female_fairy,
-            R.drawable.vampire,
-            R.drawable.mx_claus
+            EmojiDrawer.EmojiInfo(R.drawable.angel, "angel"),
+            EmojiDrawer.EmojiInfo(R.drawable.santa, "santa"),
+            EmojiDrawer.EmojiInfo(R.drawable.female_fairy, "female_fairy"),
+            EmojiDrawer.EmojiInfo(R.drawable.vampire, "vampire"),
+            EmojiDrawer.EmojiInfo(R.drawable.mx_claus, "mx_claus")
         )
         emojiDrawer.setEmojis(emojis)
         findViewById<TextView>(R.id.text2).setOnClickListener {
@@ -56,8 +55,6 @@ class MainActivity : AppCompatActivity() {
                 snack.show()
             }
         }
-
-
 
         val popButton = findViewById<Button>(R.id.text3)
         val emojiDrawerPopupWindow = EmojiPopupWindow(this, popButton)

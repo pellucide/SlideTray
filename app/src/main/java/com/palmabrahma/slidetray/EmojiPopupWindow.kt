@@ -19,6 +19,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupWindow
+import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
@@ -26,6 +27,7 @@ import androidx.core.view.children
 import com.google.android.material.shape.CornerFamily
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.shape.ShapeAppearanceModel
+import com.palmabrahma.emojidrawer.EmojiDrawer
 
 class EmojiPopupWindow(context: Context, private var anchor: View) {
 
@@ -38,9 +40,9 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
     private var emojiSize = 48
     private var emojiSpacing = 4
     private var animationDuration = 200L
-    private var scaleFactor = 3.8f
+    private var scaleFactor = 2.8f
     private var cornerRadius = 32f
-    private var currentSelected: AppCompatImageView? = null
+    private var currentSelected: View? = null
     private var defaultElevation = 0f
 
     var onEmojiSelectedListener: OnEmojiSelectedListener? = null
@@ -84,10 +86,6 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
         popupWindow.setOnDismissListener { isShowing = false }
         displayMetrics = contentView.context.resources.displayMetrics
         //popupWindow.overlapAnchor = true
-        //popupWindow.setTouchInterceptor { v, event ->
-        //false
-        //}
-
     }
 
     private fun createEmojiImageView(drawableRes: Int): AppCompatImageView {
@@ -122,17 +120,19 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     android.util.Log.d(TAG, "ACTION_DOWN view:$index")
-                    if (currentSelected != v)
-                        animateEmojiSelection(v, true)
+                    findViewFromEvent(event)?.let { view ->
+                        if (currentSelected != view)
+                            animateEmojiSelection(view, true)
+                    }
                     true
                 }
 
                 MotionEvent.ACTION_UP -> {
                     android.util.Log.d(TAG, "ACTION_UP view:$index")
-                    findViewFromEvent(event)?.let { imageView ->
-                        animateEmojiSelection(imageView, false)
-                        handleEmojiSelection(imageView)
-                    }?:run {
+                    findViewFromEvent(event)?.let { view ->
+                        animateEmojiSelection(view, false)
+                        handleEmojiSelection(view)
+                    } ?: run {
                         currentSelected?.let {
                             animateEmojiSelection(it, false)
                         }
@@ -148,9 +148,9 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
 
                 MotionEvent.ACTION_MOVE -> {
                     android.util.Log.d(TAG, "ACTION_MOVE view:$index")
-                    findViewFromEvent(event)?.let { imageView ->
-                        if (currentSelected != imageView)
-                            animateEmojiSelection(imageView, true)
+                    findViewFromEvent(event)?.let { view ->
+                        if (currentSelected != view)
+                            animateEmojiSelection(view, true)
                     }
                     true
                 }
@@ -163,16 +163,15 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
         }
     }
 
-    private fun findViewFromEvent(event: MotionEvent): AppCompatImageView? {
-        emojiContainer.children.forEach { vv ->
-            val v = vv as AppCompatImageView
+    private fun findViewFromEvent(event: MotionEvent): View? {
+        emojiContainer.children.forEach { v ->
             if (isTouchInsideView(event, v))
                 return v
         }
         return null
     }
 
-    private fun animateEmojiSelection(view: AppCompatImageView, selected: Boolean) {
+    private fun animateEmojiSelection(view: View, selected: Boolean) {
         val animator = ValueAnimator.ofFloat(
             if (selected) 0f else 1f,
             if (selected) 1f else 0f
@@ -180,14 +179,18 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
             duration = animationDuration
             addUpdateListener {
                 val fraction = it.animatedValue as Float
-                view.scaleX = 1 + (scaleFactor - 1) * fraction
-                view.scaleY = 1 + (scaleFactor - 1) * fraction
+                val scaling = 1 + (scaleFactor - 1) * fraction
+                //android.util.Log.d(TAG, "selected: $selected, scaling=${scaling}, view.height=${view.height}")
+                view.scaleX = scaling
+                view.scaleY = scaling
+                view.translationY = (1 - scaling) * view.height / 4
                 if (doElevation) {
                     if (selected) view.elevation += fraction
                     else view.elevation += (fraction - 1)
                 }
-                (view.background as MaterialShapeDrawable).shapeAppearanceModel =
-                    createShapeModel(cornerRadius * fraction)
+                if (view.background is MaterialShapeDrawable)
+                    (view.background as MaterialShapeDrawable).shapeAppearanceModel =
+                        createShapeModel(cornerRadius * fraction)
             }
         }
         //android.util.Log.d(TAG, "selected: $selected, elevation=${view.elevation}")
@@ -206,12 +209,26 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
         this.anchor = anchor
     }
 
-    fun setEmojis(drawableResIds: List<Int>) {
+    fun setEmojis(emojiInfo: List<EmojiDrawer.EmojiInfo>) {
         emojiContainer.removeAllViews()
-        drawableResIds.forEachIndexed { _, resId ->
+        emojiInfo.forEach {
+            val itemView: LinearLayout = LayoutInflater.from(emojiContainer.context)
+                .inflate(
+                    com.palmabrahma.emojidrawer.R.layout.emoji_item,
+                    emojiContainer,
+                    false
+                ) as LinearLayout
+            val origImageView =
+                itemView.findViewById<ImageView>(com.palmabrahma.emojidrawer.R.id.emoji_image)
+            origImageView.visibility = View.GONE
+            val textView =
+                itemView.findViewById<TextView>(com.palmabrahma.emojidrawer.R.id.emoji_name)
+            textView.text = it.topText
+            val resId = it.drawableRes
             val imageView = createEmojiImageView(resId).apply {
                 tag = resId // Store resource ID in view tag
             }
+            itemView.addView(imageView)
             setupEmojiTouch(imageView)
             val layoutParams = LinearLayout.LayoutParams(
                 emojiSize.dpToPx(),
@@ -220,7 +237,7 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
                 marginEnd = emojiSpacing.dpToPx()
             }
 
-            emojiContainer.addView(imageView, layoutParams)
+            emojiContainer.addView(itemView, layoutParams)
         }
     }
 
@@ -244,17 +261,18 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
         }
     }
 
-    private fun handleEmojiSelection(view: AppCompatImageView) {
+    private fun handleEmojiSelection(view: View) {
         val index = emojiContainer.indexOfChild(view)
         val drawableRes = view.tag as? Int ?: 0
         onEmojiSelectedListener?.onEmojiSelected(index, drawableRes)
         close()
     }
 
-    private fun resetPreviousSelection(view: AppCompatImageView) {
+    private fun resetPreviousSelection(view: View) {
         view.animate()
             .scaleX(1f)
             .scaleY(1f)
+            .translationY(0f)
             .setDuration(animationDuration)
             .start()
         (view.background as? MaterialShapeDrawable)?.apply {
@@ -286,7 +304,7 @@ class EmojiPopupWindow(context: Context, private var anchor: View) {
         }
     }
 
-    private fun isTouchInsideView(event: MotionEvent, view: AppCompatImageView): Boolean {
+    private fun isTouchInsideView(event: MotionEvent, view: View): Boolean {
         val emojiContainerLocation = IntArray(2)
         val viewLocationRect = Rect()
         view.getDrawingRect(viewLocationRect)
